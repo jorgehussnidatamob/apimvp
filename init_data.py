@@ -1,4 +1,4 @@
-from models import init_db, DeviceCommand
+from models import init_db, DeviceCommand, License
 
 def populate_test_data():
     """Popula o banco com dados de teste para a API simplificada"""
@@ -21,6 +21,23 @@ def populate_test_data():
         command_id = DeviceCommand.add_command(device_id, command)
         print(f"   ✅ Comando '{command}' adicionado para {device_id} (ID: {command_id})")
     
+    # Dados de teste - licenças por UUID
+    test_licenses = [
+        ("550e8400-e29b-41d4-a716-446655440000", "LIC-2024-001"),
+        ("550e8400-e29b-41d4-a716-446655440001", "LIC-2024-002"),
+        ("550e8400-e29b-41d4-a716-446655440002", "LIC-2024-003"),
+        ("f47ac10b-58cc-4372-a567-0e02b2c3d479", "LIC-2024-004"),
+        ("6ba7b810-9dad-11d1-80b4-00c04fd430c8", "LIC-2024-005")
+    ]
+    
+    print("🎫 Adicionando licenças de teste...")
+    for uuid, license_number in test_licenses:
+        try:
+            license_id = License.add_license(uuid, license_number)
+            print(f"   ✅ Licença '{license_number}' adicionada para UUID {uuid} (ID: {license_id})")
+        except ValueError as e:
+            print(f"   ⚠️  UUID {uuid} já existe: {e}")
+    
     print("\n🎉 Dados de teste adicionados com sucesso!")
     print("\n🧪 Como testar a API:")
     print("1. Acesse http://localhost:5000/swagger/ para ver a documentação")
@@ -28,6 +45,7 @@ def populate_test_data():
     print("   • GET /api/device/device-001/command - Pega comando para device-001")
     print("   • POST /api/command - Envia novo comando")
     print("   • GET /api/commands - Lista todos comandos")
+    print("   • GET /api/license/{uuid} - Consulta número de licença por UUID")
     print("   • GET /api/health - Verifica se API está OK")
     
     print("\n📱 Exemplo de uso do device:")
@@ -37,6 +55,9 @@ def populate_test_data():
     print('   curl -X POST http://localhost:5000/api/command \\')
     print('        -H "Content-Type: application/json" \\')
     print('        -d \'{"device_id": "device-005", "command": "restart"}\'')
+    
+    print("\n🎫 Exemplo de consulta de licença por UUID:")
+    print("   curl http://localhost:5000/api/license/550e8400-e29b-41d4-a716-446655440000")
 
 if __name__ == '__main__':
     populate_test_data() 

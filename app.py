@@ -1,6 +1,7 @@
+
 from flask import Flask
 from flask_restx import Api, Resource, fields
-from models import init_db, DeviceCommand
+from models import init_db, DeviceCommand, License
 
 # Inicializar Flask app
 app = Flask(__name__)
@@ -126,6 +127,34 @@ class AllCommandsResource(Resource):
         except Exception as e:
             api.abort(500, f'Erro ao buscar comandos: {str(e)}')
 
+@ns.route('/license/<string:uuid>')
+class LicenseResource(Resource):
+    @api.doc('get_license_by_uuid')
+    def get(self, uuid):
+        """
+        Consulta número de licença por UUID
+        
+        Retorna o número de licença associado ao UUID fornecido.
+        """
+        try:
+            license_data = License.get_license_by_uuid(uuid)
+            
+            if license_data:
+                return {
+                    'status': 'success',
+                    'data': license_data,
+                    'message': 'Licença encontrada'
+                }
+            else:
+                return {
+                    'status': 'error',
+                    'data': None,
+                    'message': 'Licença não encontrada para este UUID'
+                }, 404
+                
+        except Exception as e:
+            api.abort(500, f'Erro interno: {str(e)}')
+
 @ns.route('/health')
 class HealthResource(Resource):
     @api.doc('health_check')
@@ -138,13 +167,14 @@ class HealthResource(Resource):
         }
 
 if __name__ == '__main__':
-    print("🚀 Iniciando Device Command API...")
-    print("📋 Swagger UI disponível em: http://localhost:5000/swagger/")
-    print("🔗 Rotas principais:")
-    print("   GET  /api/device/{device_id}/command - Lista histórico de comandos do device")
+    print(">>> Iniciando Device Command API...")
+    print(">>> Swagger UI disponivel em: http://localhost:5000/swagger/")
+    print(">>> Rotas principais:")
+    print("   GET  /api/device/{device_id}/command - Lista historico de comandos do device")
     print("   GET  /api/device/{device_id}/pending - Device consulta comandos pendentes")
     print("   POST /api/command - Frontend envia comandos")
     print("   GET  /api/commands - Lista todos comandos (admin)")
+    print("   GET  /api/license/{uuid} - Consulta numero de licenca por UUID")
     print("   GET  /api/health - Health check")
     
     app.run(debug=True, host='0.0.0.0', port=5000) 

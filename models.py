@@ -20,6 +20,16 @@ def init_db():
         )
     ''')
     
+    # Tabela para licenças por UUID
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS licenses (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            uuid TEXT UNIQUE NOT NULL,
+            license_number TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -101,6 +111,73 @@ class DeviceCommand:
             'created_at': row[4],
             'executed_at': row[5]
         } for row in results]
+
+class License:
+    @staticmethod
+    def get_license_by_uuid(uuid):
+        """Retorna número de licença pelo UUID"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT license_number, created_at
+            FROM licenses
+            WHERE uuid = ?
+        ''', (uuid,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                'uuid': uuid,
+                'license_number': result[0],
+                'created_at': result[1]
+            }
+        return None
+    
+    @staticmethod
+    def add_license(uuid, license_number):
+        """Adiciona uma nova licença"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO licenses (uuid, license_number)
+                VALUES (?, ?)
+            ''', (uuid, license_number))
+            
+            conn.commit()
+            license_id = cursor.lastrowid
+            conn.close()
+            return license_id
+            
+        except sqlite3.IntegrityError:
+            conn.close()
+            raise ValueError("UUID já existe no banco de dados")
+    
+    @staticmethod
+    def get_all_licenses():
+        """Retorna todas as licenças (para debug/admin)"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, uuid, license_number, created_at
+            FROM licenses
+            ORDER BY created_at DESC
+        ''')
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        return [{
+            'id': row[0],
+            'uuid': row[1],
+            'license_number': row[2],
+            'created_at': row[3]
+        } for row in results]
     
     @staticmethod
     def get_commands_by_device(device_id):
@@ -125,4 +202,71 @@ class DeviceCommand:
             'status': row[3],
             'created_at': row[4],
             'executed_at': row[5]
+        } for row in results]
+
+class License:
+    @staticmethod
+    def get_license_by_uuid(uuid):
+        """Retorna número de licença pelo UUID"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT license_number, created_at
+            FROM licenses
+            WHERE uuid = ?
+        ''', (uuid,))
+        
+        result = cursor.fetchone()
+        conn.close()
+        
+        if result:
+            return {
+                'uuid': uuid,
+                'license_number': result[0],
+                'created_at': result[1]
+            }
+        return None
+    
+    @staticmethod
+    def add_license(uuid, license_number):
+        """Adiciona uma nova licença"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        try:
+            cursor.execute('''
+                INSERT INTO licenses (uuid, license_number)
+                VALUES (?, ?)
+            ''', (uuid, license_number))
+            
+            conn.commit()
+            license_id = cursor.lastrowid
+            conn.close()
+            return license_id
+            
+        except sqlite3.IntegrityError:
+            conn.close()
+            raise ValueError("UUID já existe no banco de dados")
+    
+    @staticmethod
+    def get_all_licenses():
+        """Retorna todas as licenças (para debug/admin)"""
+        conn = sqlite3.connect(DB_NAME)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, uuid, license_number, created_at
+            FROM licenses
+            ORDER BY created_at DESC
+        ''')
+        
+        results = cursor.fetchall()
+        conn.close()
+        
+        return [{
+            'id': row[0],
+            'uuid': row[1],
+            'license_number': row[2],
+            'created_at': row[3]
         } for row in results] 
